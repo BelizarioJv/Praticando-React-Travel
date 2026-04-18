@@ -4,3 +4,14 @@
   box-sizing: border-box;
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
+.rdrDefinedRangesWrapper {
+  display: none !important;
+}
+
+.rdrDateRangeWrapper {
+  display: flex;
+}
+
+.rdrCalendarWrapper {
+  width: 100% !important;
+}
