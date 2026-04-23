@@ -1,22 +1,15 @@
-import {
-  PlaneTakeoff,
-  ArrowRight,
-  Calendar,
-  MapPin,
-  User,
-  Settings2,
-  X,
-  Plus,
-} from "lucide-react";
+import { PlaneTakeoff, Calendar, MapPin, User } from "lucide-react";
 import { useState } from "react";
 import { DateRangePicker } from "react-date-range";
 import type { Range } from "react-date-range";
+import Dialog from "./components/Dialog";
+import { Button } from "./components/Button";
+import { set } from "date-fns";
 
 function App() {
+  const [guests, setGuests] = useState<string[]>([]);
   const [showInviteEmail, setShowInviteEmail] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
-  const [guests, setGuests] = useState<string[]>([]);
-  const [newGuest, setNewGuest] = useState<string>("");
   const [disabledInput, setDisabledInput] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [destination, setDestination] = useState<string>("");
@@ -50,6 +43,27 @@ function App() {
     );
   };
 
+  const closeCalendar = () => {
+    setShowCalendar(false);
+  };
+  const openCalendar = () => {
+    setShowCalendar(true);
+  };
+
+  const handleShowInviteEmail = () => {
+    setShowInviteEmail(true);
+    setDisabledInput(true);
+    setShowCalendar(false);
+  };
+
+  const handleHideInviteEmail = () => {
+    setShowInviteEmail(false);
+    setDisabledInput(false);
+  };
+  const handleShowDialog = () => {
+    setShowDialog(true);
+  };
+
   return (
     <>
       <main className="h-screen flex flex-col items-center justify-center gap-6 ">
@@ -81,51 +95,31 @@ function App() {
                 />
               </div>
 
-              <div className=" flex flex-col items-center gap-3 bg-zinc-500 rounded-lg p-4 shadow-lg shadow-black/80">
+              <div className=" flex flex-col justify-center items-center gap-5 bg-zinc-500 rounded-lg p-4 shadow-lg shadow-black/80">
                 {showCalendar ? (
-                  <div className="w-full">
-                    <DateRangePicker
-                      onChange={(item) => setRange([item.selection])}
-                      moveRangeOnFirstSelection={false}
-                      months={1}
-                      ranges={range}
-                      direction="horizontal"
-                    />
-                    <button
-                      onClick={() => setShowCalendar(false)}
-                      className="bg-lime-300 text-lime-950 rounded-lg p-5  gap-2 flex items-center justify-center w-full mt-4">
-                      Fechar calendário <X />
-                    </button>
+                  <div className="flex flex-col items-center gap-2">
+                    <div>
+                      <DateRangePicker
+                        onChange={(item) => setRange([item.selection])}
+                        moveRangeOnFirstSelection={false}
+                        months={1}
+                        ranges={range}
+                        direction="horizontal"
+                      />
+                    </div>
+                    <Button onClick={closeCalendar}>Fechar calendário</Button>
                   </div>
                 ) : (
-                  <button
-                    onClick={() => {
-                      setShowCalendar(true);
-                    }}
-                    className="bg-lime-300 text-lime-950 rounded-lg gap-2 p-5  flex items-center justify-center w-full">
-                    Selecione a data da viagem <Calendar />
-                  </button>
+                  <Button onClick={openCalendar}>Abrir calendario</Button>
                 )}
               </div>
 
               {showInviteEmail ? (
-                <button
-                  onClick={() => {
-                    setShowInviteEmail(false);
-                    setDisabledInput(false);
-                  }}
-                  className="bg-zinc-500 text-white rounded-lg shadow-lg shadow-black/80 p-5 font-medium flex items-center ">
-                  Alterar local/data <Settings2 />
-                </button>
+                <Button onClick={handleHideInviteEmail}>
+                  Alterar local/data <Calendar />
+                </Button>
               ) : (
-                <button
-                  onClick={() => {
-                    setShowInviteEmail(true);
-                    setDisabledInput(true);
-                  }}
-                  className="bg-lime-300 text-lime-950 rounded-lg gap-2 shadow-lg shadow-black/80 p-5 font-medium flex items-center ">
-                  Continuar <ArrowRight />
-                </button>
+                <Button onClick={handleShowInviteEmail}>Continuar</Button>
               )}
             </div>
 
@@ -137,90 +131,26 @@ function App() {
                     <User />
                     <p>Adicione convidados para a viagem</p>
                   </div>
-                  <button
-                    onClick={() => setShowDialog(!showDialog)}
-                    className="bg-lime-300 text-lime-950 rounded-lg p-5 font-medium flex items-center ">
-                    <ArrowRight />
-                  </button>
+                  <Button onClick={handleShowDialog}>
+                    Adicionar convidados
+                  </Button>
                 </div>
               </div>
             )}
             <div>
-              <button
-                onClick={handleSubmit}
-                className="bg-lime-300 text-lime-950 rounded-lg p-5 font-medium flex items-center gap-2 hover:bg-lime-400 transition-colors shadow-lg shadow-black/80">
-                Planejar viagem <ArrowRight />
-              </button>
+              <Button onClick={handleSubmit}>Planejar viagem</Button>
             </div>
           </div>
         </form>
 
-        {/* Dialog */}
+        {/* Dialog*/}
         {showDialog && (
-          <div className="fixed inset-0 bg-black/60 flex items-center justify-center">
-            <div className="w-160 rounded-lg p-6 shadow-black/50 bg-zinc-600 flex flex-col gap-3">
-              <div>
-                {guests.length > 0 ? (
-                  <div className="flex flex-row justify-between w-full">
-                    <h3 className="font-lg font-semibold">
-                      Selecione convidados
-                    </h3>
-                    <button
-                      className="p-2 bg-lime-300 text-white font-bold shadow-lgshadow-black/80 rounded-lg"
-                      onClick={() => setShowDialog(!showDialog)}>
-                      Pronto
-                    </button>
-                  </div>
-                ) : (
-                  <div className="flex flex-row justify-between w-full">
-                    <h3 className="font-lg font-semibold">
-                      Selecione convidados
-                    </h3>
-                    <X onClick={() => setShowDialog(!showDialog)} />
-                  </div>
-                )}
-              </div>
-              <p>
-                Os convidados irao receber e-mails para confirmar a participação
-                na viagem
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {guests.map((guest) => (
-                  <div
-                    key={guest}
-                    className="rounded-lg shadow-black/80 bg-zinc-900 flex flex-row p-4 gap-3 w-fit">
-                    <span>{guest}</span>
-                    <button className="bg-lime-300 text-lime-950 shadow-lgshadow-black/80 rounded-lg ">
-                      <X
-                        onClick={() =>
-                          setGuests(guests.filter((g) => g != guest))
-                        }
-                      />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <hr />
-              <input
-                className="w-full border rounded p-4"
-                type="text"
-                placeholder="Digite o email do convidado"
-                value={newGuest}
-                onChange={(e) => setNewGuest(e.target.value)}
-              />
-              <button
-                className=" flex flex-row gap-2 bg-lime-300 text-lime-950 rounded-lg p-5 font-medium justify-center "
-                onClick={() => {
-                  if (newGuest.trim() !== "") {
-                    setGuests([...guests, newGuest]);
-                    setNewGuest("");
-                  }
-                }}>
-                <Plus />
-                Adicionar convidado
-              </button>
-            </div>
-          </div>
+          <Dialog
+            showDialog={showDialog}
+            setShowDialog={setShowDialog}
+            guests={guests}
+            setGuests={setGuests}
+          />
         )}
 
         {/*Texto  */}
