@@ -6,7 +6,8 @@ import Dialog from "./components/Dialog";
 import { Button } from "./components/Button";
 import { Input } from "./components/Input";
 import { tripsService } from "./services/api";
-import type { Destination } from "./services/api";
+import type { Destination } from "./entities/Destination";
+import type { Weather } from "./entities/Weather";
 
 function App() {
   const [guests, setGuests] = useState<string[]>([]);
@@ -17,7 +18,8 @@ function App() {
   const [showCalendar, setShowCalendar] = useState(false);
   const [query, setQuery] = useState<string>("");
   const [results, setResults] = useState<Destination[]>([]);
-  const [selectedDestination, setSelectedDestination] = useState<string>("");
+  const [selectedDestination, setSelectedDestination] = useState<Destination>();
+  const [weather, setWeather] = useState<Weather | null>(null);
   const [range, setRange] = useState<Range[]>([
     {
       startDate: new Date(),
@@ -25,27 +27,35 @@ function App() {
       key: "selection",
     },
   ]);
-
   const startDate = range[0].startDate ?? new Date();
   const endDate = range[0].endDate ?? new Date();
-  const diffTime = endDate.getTime() - startDate.getTime();
-  const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  const formatDate = (date: Date) => {
+    return date.toISOString().split("T")[0];
+  };
+  const startDateFormatted = formatDate(startDate);
+  const endDateFormatted = formatDate(endDate);
 
   const handleSubmit = () => {
-    // Lógica para enviar os dados da viagem e convidados para o backend
-    window.alert(
-      "Viagem planejada com sucesso! Convidados: " +
-        guests.join(", ") +
-        " | Duração: " +
-        days +
-        " dias" +
-        " | Data de início: " +
-        startDate.toLocaleDateString() +
-        " | Data de término: " +
-        endDate.toLocaleDateString() +
-        " | Destino: " +
-        selectedDestination,
-    );
+    const weatherData: Weather = {
+      latitude: selectedDestination?.latitude ?? 0,
+      longitude: selectedDestination?.longitude ?? 0,
+      dates: [],
+      startDate: startDateFormatted,
+      endDate: endDateFormatted,
+      temperature_2m_max: [],
+      temperature_2m_min: [],
+    };
+
+    tripsService
+      .getWeather(weatherData)
+      .then((weather) => {
+        console.log(weather);
+        setWeather(weather);
+      })
+      .catch((error) => {
+        console.error("Erro ao obter dados do clima:", error);
+      });
   };
 
   useEffect(() => {
@@ -56,10 +66,16 @@ function App() {
     return () => clearTimeout(timeout);
   }, [query]);
 
-  const handleSelectDestination = (name: string) => {
-    setSelectedDestination(name);
-    setQuery(name);
-    setResults([]);
+  useEffect(() => {
+    const handleClickOutside = () => setResults([]);
+    window.addEventListener("click", handleClickOutside);
+
+    return () => window.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  const handleSelectDestination = (city: Destination) => {
+    setQuery(city.name);
+    setSelectedDestination(city);
   };
 
   const handleCalendar = () => {
@@ -116,8 +132,8 @@ function App() {
                       <div
                         key={result.id}
                         className="p-3 hover:bg-white cursor-pointer text-zinc-400"
-                        onClick={() => handleSelectDestination(result.name)}>
-                        {result.name}
+                        onClick={() => handleSelectDestination(result)}>
+                        {result.name} , {result.contry}
                       </div>
                     ))}
                   </div>
@@ -169,7 +185,11 @@ function App() {
               </div>
             )}
             <div>
-              <Button onClick={handleSubmit}>Planejar viagem</Button>
+              <Button
+                disabled={!selectedDestination || !startDate || !endDate}
+                onClick={handleSubmit}>
+                Criar viagem
+              </Button>
             </div>
           </div>
         </form>
@@ -183,6 +203,18 @@ function App() {
             setGuests={setGuests}
           />
         )}
+
+        <section className="flex flex-col items-center bg-zinc-600 rounded-lg shadow-lg shadow-black/80 border border-white/5 p-10">
+          {weather?.dates.map((day, index) => (
+            <div key={day} className="text-white">
+              <p>📅 {day}</p>
+              <p>
+                🌡️ {weather.temperature_2m_min[index]}°C -{" "}
+                {weather.temperature_2m_max[index]}°C
+              </p>
+            </div>
+          ))}
+        </section>
 
         {/*Texto  */}
         <div className="flex items-center justify-center">

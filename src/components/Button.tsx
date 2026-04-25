@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react";
 
 type ButtonProps = {
-  onClick: () => void;
+  onClick?: () => void;
   disabled?: boolean;
   children?: React.ReactNode;
 };
